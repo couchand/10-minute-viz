@@ -12,9 +12,8 @@ margin =
 width = 960 - margin.left - margin.right
 height = 600 - margin.top - margin.bottom
 
-radius = 74
-thickness = 32
-padding = 10
+thickness = 0.4
+padding = 0.2
 
 color =
   answered: "#75845C"
@@ -22,10 +21,9 @@ color =
   unanswered: "#9A4444"
 
 xScale = d3.scale.ordinal()
-    .rangeRoundBands [0, width], 0.1
+    .rangeRoundBands [0, width], 0.2
 
 yScale = d3.scale.linear()
-    .range [height, 0]
 
 xAxis = d3.svg.axis()
     .scale(xScale)
@@ -43,8 +41,6 @@ yByTotal = (d) -> yScale d.total_questions
 colorByType = (d) -> color[d.type]
 
 arc = d3.svg.arc()
-    .outerRadius(radius)
-    .innerRadius(radius - thickness)
 
 pie = d3.layout.pie()
     .sort(null)
@@ -104,6 +100,14 @@ drawChart = (so, su, sf) ->
     xScale.domain [so, sf, su].map (d) -> d.site.name
     yScale.domain d3.extent [so, sf, su], (d) -> d.total_questions
 
+    radius = xScale.rangeBand() * 0.5
+    paddingSize = radius * padding
+    radius -= paddingSize
+    arc.outerRadius(radius)
+        .innerRadius(radius - radius * thickness)
+
+    yScale.range [height, radius*2 + paddingSize]
+
     d3.select("#viz").append("ul")
         .selectAll("li").data([so, su, sf])
         .enter().append("li")
@@ -138,7 +142,7 @@ drawChart = (so, su, sf) ->
         .data(sites)
         .enter().append("g")
         .attr("class", "pie")
-        .attr("transform", (d) -> "translate(#{radius + xBySite(d)},#{radius})")
+        .attr("transform", (d) -> "translate(#{radius + xBySite(d) + paddingSize},#{radius})")
 
     pies.selectAll(".arc")
         .data((d) -> pie d.questions)
