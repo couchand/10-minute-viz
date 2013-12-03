@@ -1,10 +1,20 @@
 # visualization
 
+# stack api
+
 key = "YOUR_API_KEY_HERE"
+
+cleanResponse = (site) ->
+    (response) ->
+        items = response.items[0]
+        items.site = site
+        items
 
 getStats = (site) ->
     $.getJSON("https://api.stackexchange.com/2.1/info?site=#{site}&key=#{key}")
-        .then -> items = arguments[0].items[0]; items.site = site; items
+        .then cleanResponse(site)
+
+# fetch data and draw
 
 soFetch = getStats "stackoverflow"
 suFetch = getStats "superuser"
