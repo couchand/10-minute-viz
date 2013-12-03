@@ -67,9 +67,6 @@ allSites = {}
 saveSites = (sites) ->
     allSites[site.api_site_parameter] = site for site in sites
 
-tagSite = (site) ->
-    (response) -> response.site = allSites[site]; response
-
 getSites = () ->
     $.getJSON("https://api.stackexchange.com/2.1/sites?key=#{key}&filter=#{filter.sites}")
         .then(getItems)
@@ -79,7 +76,6 @@ getStats = (site) ->
     $.getJSON("https://api.stackexchange.com/2.1/info?site=#{site}&key=#{key}&filter=#{filter.stats}")
         .then(getItems)
         .then(getFirst)
-        .then tagSite(site)
 
 extractTypes = (sites) ->
     for site in sites
@@ -119,15 +115,6 @@ drawChart = (so, su, sf) ->
         .append("g")
         .attr("transform", "translate(#{margin.left},#{margin.top})")
 
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0,#{height})")
-        .call(xAxis)
-
-    svg.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-
     svg.selectAll(".site")
         .data([so, su, sf])
         .enter().append("rect")
@@ -137,6 +124,15 @@ drawChart = (so, su, sf) ->
         .attr("y", yByTotal)
         .attr("width", xScale.rangeBand())
         .attr("height", (d) -> height - yByTotal(d))
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0,#{height})")
+        .call(xAxis)
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
 
     pies = svg.selectAll(".pie")
         .data(sites)
