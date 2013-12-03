@@ -60,7 +60,7 @@ pie = d3.layout.pie()
 key = "YOUR_API_KEY_HERE"
 filter =
     sites: "!SmOA0zL2EfpNhn1ZEq"
-    stats: "!.HwmyBFZVc789XV8bpU9Aa1g0GdoP"
+    stats: "!tRKJ12V4q)fdK4n3R.46wlC8Zbqz2SL"
 
 getItems = (response) -> response.items
 getFirst = (response) -> response[0]
@@ -151,10 +151,11 @@ drawChart = (so, su, sf) ->
 
     pies.append("image")
         .attr("preserveAspectRatio", "xMidYMid")
+        .attr("title", (d) -> d.site.name)
         .attr("width", radius)
         .attr("height", radius)
         .attr("transform", "translate(#{-radius*0.5},#{-radius*0.5})")
-        .attr("xlink:href", (d) -> d.site.logo_url)
+        .attr("xlink:href", (d) -> d.site.icon_url)
 
     pies.selectAll(".arc")
         .data((d) -> pie d.questions)
