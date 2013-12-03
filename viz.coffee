@@ -12,6 +12,10 @@ margin =
 width = 960 - margin.left - margin.right
 height = 600 - margin.top - margin.bottom
 
+radius = 74
+thickness = 32
+padding = 10
+
 color =
   answered: "#75845C"
   accepted: "#46B525"
@@ -37,6 +41,14 @@ xBySite = (d) -> xScale d.site.name
 yByCount = (d) -> yScale d.count
 yByTotal = (d) -> yScale d.total_questions
 colorByType = (d) -> color[d.type]
+
+arc = d3.svg.arc()
+    .outerRadius(radius)
+    .innerRadius(radius - thickness)
+
+pie = d3.layout.pie()
+    .sort(null)
+    .value (d) -> d.count
 
 bySite = d3.nest().key (d) -> d.site.site.name
 stack = d3.layout.stack()
@@ -69,22 +81,15 @@ getStats = (site) ->
         .then(getFirst)
         .then tagSite(site)
 
-flatten = (sites) ->
-    stats = []
+extractTypes = (sites) ->
     for site in sites
-        stats.push
-            site: site
-            type: "accepted"
-            count: site.total_accepted
-        stats.push
-            site: site
-            type: "unanswered"
-            count: site.total_unanswered
-        stats.push
-            site: site
-            type: "answered"
-            count: site.total_questions - site.total_accepted - site.total_unanswered
-    stats
+        site.questions = ["unanswered", "answered", "accepted"].map (type) ->
+            if type is "answered"
+                type: type
+                count: site.total_questions - site.total_accepted - site.total_unanswered
+            else
+                type: type
+                count: site["total_#{type}"]
 
 # fetch data and draw
 
@@ -97,6 +102,9 @@ getSites().then ->
 
 drawChart = (so, su, sf) ->
 #    console.log stack bySite.entries(flatten [so, su, sf]).map (d) -> d.values
+    sites = [so, sf, su]
+    extractTypes sites
+
     xScale.domain [so, sf, su].map (d) -> d.site.name
     yScale.domain d3.extent [so, sf, su], (d) -> d.total_questions
 
@@ -129,3 +137,16 @@ drawChart = (so, su, sf) ->
         .attr("y", yByTotal)
         .attr("width", xScale.rangeBand())
         .attr("height", (d) -> height - yByTotal(d))
+
+    pies = svg.selectAll(".pie")
+        .data(sites)
+        .enter().append("g")
+        .attr("class", "pie")
+        .attr("transform", (d) -> "translate(#{radius + xBySite(d)},#{radius})")
+
+    pies.selectAll(".arc")
+        .data((d) -> pie d.questions)
+        .enter().append("path")
+        .attr("class", "arc")
+        .attr("d", arc)
+        .style("fill", (d) -> console.log d;colorByType d.data)
