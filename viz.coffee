@@ -149,6 +149,13 @@ drawChart = (so, su, sf) ->
         .attr("class", "pie")
         .attr("transform", (d) -> "translate(#{radius + xBySite(d) + paddingSize},#{radius})")
 
+    pies.append("image")
+        .attr("preserveAspectRatio", "xMidYMid")
+        .attr("width", radius)
+        .attr("height", radius)
+        .attr("transform", "translate(#{-radius*0.5},#{-radius*0.5})")
+        .attr("xlink:href", (d) -> d.site.logo_url)
+
     pies.selectAll(".arc")
         .data((d) -> pie d.questions)
         .enter().append("path")
