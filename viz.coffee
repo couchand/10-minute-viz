@@ -7,16 +7,10 @@ filter =
     sites: "!SmOA0zL2EfpNhn1ZEq"
     stats: "!.HwmyBFZVc789XV8bpU9Aa1g0GdoP"
 
-getItems = (response) ->
-    response.items
-
-getFirst = (response) ->
-    response[0]
-
+getItems = (response) -> response.items
+getFirst = (response) -> response[0]
 tagSite = (site) ->
-    (response) ->
-        response.site = site
-        response
+    (response) -> response.site = site; response
 
 allSites = {}
 saveSites = (sites) ->
@@ -35,13 +29,14 @@ getStats = (site) ->
 
 # fetch data and draw
 
-infoFetch = getSites()
+getSites().then ->
+    soFetch = getStats "stackoverflow"
+    suFetch = getStats "superuser"
+    sfFetch = getStats "serverfault"
 
-soFetch = getStats "stackoverflow"
-suFetch = getStats "superuser"
-sfFetch = getStats "serverfault"
+    $.when(soFetch, suFetch, sfFetch).then drawChart
 
-$.when(infoFetch, soFetch, suFetch, sfFetch).then (_, so, su, sf) ->
+drawChart = (so, su, sf) ->
     d3.select("#viz").append("ul")
         .selectAll("li").data([so, su, sf])
         .enter().append("li")
