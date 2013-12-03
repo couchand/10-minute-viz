@@ -5,10 +5,10 @@
 format = d3.format "1,000"
 
 margin =
-  top: 40
+  top: 20
   right: 20
   bottom: 20
-  left: 50
+  left: 80
 width = 960 - margin.left - margin.right
 height = 600 - margin.top - margin.bottom
 
@@ -39,9 +39,15 @@ xBySite = (d) -> xScale d.site.name
 yByCount = (d) -> yScale d.count
 yByTotal = (d) -> yScale d.total_questions
 colorByType = (d) -> color[d.type]
+colorBySite = (d) -> d.site.styling.tag_foreground_color
+
+calculateRadius = ->
+    radius = xScale.rangeBand() * 0.5
+    paddingSize = radius * padding
+    radius -= paddingSize
+    [radius,  radius - radius * thickness, paddingSize]
 
 arc = d3.svg.arc()
-
 pie = d3.layout.pie()
     .sort(null)
     .value (d) -> d.count
@@ -97,14 +103,12 @@ drawChart = (so, su, sf) ->
     sites = [so, sf, su]
     extractTypes sites
 
-    xScale.domain [so, sf, su].map (d) -> d.site.name
-    yScale.domain d3.extent [so, sf, su], (d) -> d.total_questions
+    xScale.domain sites.map (d) -> d.site.name
+    yScale.domain [0, d3.max sites, (d) -> d.total_questions]
 
-    radius = xScale.rangeBand() * 0.5
-    paddingSize = radius * padding
-    radius -= paddingSize
+    [radius, innerRadius, paddingSize] = calculateRadius()
     arc.outerRadius(radius)
-        .innerRadius(radius - radius * thickness)
+        .innerRadius(innerRadius)
 
     yScale.range [height, radius*2 + paddingSize]
 
@@ -120,12 +124,13 @@ drawChart = (so, su, sf) ->
         .attr("transform", "translate(#{margin.left},#{margin.top})")
 
     svg.selectAll(".site")
-        .data([so, su, sf])
+        .data(sites)
         .enter().append("rect")
         .attr("class", "site")
         .attr("fill", "#ccc")
         .attr("x", xBySite)
         .attr("y", yByTotal)
+        .attr("fill", colorBySite)
         .attr("width", xScale.rangeBand())
         .attr("height", (d) -> height - yByTotal(d))
 
@@ -149,4 +154,4 @@ drawChart = (so, su, sf) ->
         .enter().append("path")
         .attr("class", "arc")
         .attr("d", arc)
-        .style("fill", (d) -> console.log d;colorByType d.data)
+        .style("fill", (d) -> colorByType d.data)
