@@ -9,12 +9,13 @@ filter =
 
 getItems = (response) -> response.items
 getFirst = (response) -> response[0]
-tagSite = (site) ->
-    (response) -> response.site = site; response
 
 allSites = {}
 saveSites = (sites) ->
     allSites[site.api_site_parameter] = site for site in sites
+
+tagSite = (site) ->
+    (response) -> response.site = allSites[site]; response
 
 getSites = () ->
     $.getJSON("https://api.stackexchange.com/2.1/sites?key=#{key}&filter=#{filter.sites}")
