@@ -54,8 +54,6 @@ pie = d3.layout.pie()
     .sort(null)
     .value (d) -> d.count
 
-bySite = d3.nest().key (d) -> d.site.site.name
-stack = d3.layout.stack()
 
 # stack api
 
@@ -101,7 +99,6 @@ getSites().then ->
     $.when(soFetch, suFetch, sfFetch).then drawChart
 
 drawChart = (so, su, sf) ->
-#    console.log stack bySite.entries(flatten [so, su, sf]).map (d) -> d.values
     sites = [so, sf, su]
     extractTypes sites
 
@@ -112,7 +109,7 @@ drawChart = (so, su, sf) ->
     arc.outerRadius(radius)
         .innerRadius(innerRadius)
 
-    yScale.range [height, radius*2 + paddingSize]
+    yScale.nice().range [height, radius*2 + paddingSize]
 
     d3.select("#viz").append("ul")
         .selectAll("li").data([so, su, sf])
@@ -158,4 +155,5 @@ drawChart = (so, su, sf) ->
         .attr("class", "arc")
         .attr("title", tooltipPie)
         .attr("d", arc)
+        .attr("stroke", "#ccc")
         .style("fill", (d) -> colorByType d.data)
