@@ -3,6 +3,8 @@
 # chart helpers
 
 format = d3.format "1,000"
+tooltipPie = (d) -> "#{format d.data.count} #{d.data.type} questions"
+tooltipBar = (d) -> "#{format d.total_questions} questions"
 
 margin =
   top: 20
@@ -127,6 +129,7 @@ drawChart = (so, su, sf) ->
         .data(sites)
         .enter().append("rect")
         .attr("class", "site")
+        .attr("title", tooltipBar)
         .attr("fill", "#ccc")
         .attr("x", xBySite)
         .attr("y", yByTotal)
@@ -153,5 +156,6 @@ drawChart = (so, su, sf) ->
         .data((d) -> pie d.questions)
         .enter().append("path")
         .attr("class", "arc")
+        .attr("title", tooltipPie)
         .attr("d", arc)
         .style("fill", (d) -> colorByType d.data)
