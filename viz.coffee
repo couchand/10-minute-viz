@@ -64,9 +64,11 @@ filter =
 getItems = (response) -> response.items
 getFirst = (response) -> response[0]
 
-allSites = {}
+siteList = []
+siteMap = {}
 saveSites = (sites) ->
-    allSites[site.api_site_parameter] = site for site in sites
+    siteList = sites
+    siteMap[site.api_site_parameter] = site for site in sites
 
 getSites = () ->
     $.getJSON("https://api.stackexchange.com/2.1/sites?key=#{key}&filter=#{filter.sites}&pagesize=999")
@@ -206,20 +208,26 @@ drawSelect = (sites) ->
         source: sites.map (d) ->
             label: $("<span>").html(d.name).text()
             value: d.api_site_parameter
-        select: (me) ->
-            console.log allSites[$p.val()]
-            setTimeout (-> $p.val("")), 0
+        select: ->
+            site = siteMap[$p.val()]
+            site.selected = !site.selected
+            setTimeout (-> $p.val(""); draw()), 0
 
-draw = (so, su, sf) ->
-    sites = [so, su, sf]
-    extractTypes sites
-    drawChart sites
+draw = ->
+    fetches = siteList.filter((d) -> d.selected)
+        .map((d) -> d.api_site_parameter)
+        .map getStats
 
-getSites().then (all) ->
-    drawSelect all.filter((d) -> d.site_type is "main_site").sort (a, b) -> d3.ascending a.name, b.name
+    $.when.apply($, fetches).then ->
+        sites = Array.prototype.slice.call arguments
+        extractTypes sites
+        drawChart sites
 
-    soFetch = getStats "stackoverflow"
-    suFetch = getStats "superuser"
-    sfFetch = getStats "serverfault"
+getSites().then ->
+    drawSelect siteList.filter((d) -> d.site_type is "main_site").sort (a, b) -> d3.ascending a.name, b.name
 
-    $.when(soFetch, suFetch, sfFetch).then draw
+    siteMap["stackoverflow"].selected = yes
+    siteMap["superuser"].selected = yes
+    siteMap["serverfault"].selected = yes
+
+    draw()
