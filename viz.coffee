@@ -90,6 +90,12 @@ extractTypes = (sites) ->
 
 # fetch data and draw
 
+createBars = (bars) ->
+    bars.append("rect")
+        .attr("class", "site")
+        .attr("title", tooltipBar)
+        .call(updateBars)
+
 updateBars = (bars) ->
     bars
         .attr("x", xBySite)
@@ -97,6 +103,18 @@ updateBars = (bars) ->
         .attr("fill", colorBySite)
         .attr("width", xScale.rangeBand())
         .attr("height", (d) -> height - yByTotal(d))
+
+createPies = (radius, paddingSize) -> (pies) ->
+    pies = pies.append("g")
+        .attr("class", "pie")
+
+    pies.append("image")
+        .attr("class", "logo")
+        .attr("title", (d) -> d.site.name)
+        .attr("xlink:href", (d) -> d.site.icon_url)
+        .attr("preserveAspectRatio", "xMidYMid")
+
+    pies.call(updatePies(radius, paddingSize))
 
 updatePies = (radius, paddingSize) -> (pies) ->
     pies
@@ -106,6 +124,12 @@ updatePies = (radius, paddingSize) -> (pies) ->
         .attr("width", radius)
         .attr("height", radius)
         .attr("transform", "translate(#{-radius*0.5},#{-radius*0.5})")
+
+createArcs = (arcs) ->
+    arcs.append("path")
+        .attr("class", "arc")
+        .attr("stroke", "#ccc")
+        .call(updateArcs)
 
 updateArcs = (arcs) ->
     arcs
@@ -143,14 +167,12 @@ drawChart = (sites) ->
     bars = svg.selectAll(".site")
         .data(sites, (d) -> d.site.name)
 
-    bars.enter().append("rect")
-        .attr("class", "site")
-        .call(updateBars)
+    bars.enter()
+        .call(createBars)
 
     bars.exit().remove()
 
-    bars.attr("title", tooltipBar)
-        .transition(40)
+    bars.transition(40)
         .call(updateBars)
 
     svg.select(".x.axis")
@@ -163,21 +185,11 @@ drawChart = (sites) ->
     pies = svg.selectAll(".pie")
         .data(sites, (d) -> d.site.name)
 
-    pies.exit().remove()
+    pies.enter()
+        .call(createPies(radius, paddingSize))
 
-    piesEnter = pies.enter()
-        .append("g")
-        .attr("class", "pie")
-
-    piesEnter
-        .append("image")
-        .attr("class", "logo")
-        .attr("title", (d) -> d.site.name)
-        .attr("xlink:href", (d) -> d.site.icon_url)
-        .attr("preserveAspectRatio", "xMidYMid")
-
-    piesEnter
-        .call(updatePies(radius, paddingSize))
+    pies.exit()
+        .remove()
 
     pies
         .transition(40)
@@ -186,10 +198,8 @@ drawChart = (sites) ->
     arcs = pies.selectAll(".arc")
         .data((d) -> pie d.questions)
 
-    arcs.enter().append("path")
-        .attr("class", "arc")
-        .attr("stroke", "#ccc")
-        .call(updateArcs)
+    arcs.enter()
+        .call(createArcs)
 
     arcs
         .transition(40)
