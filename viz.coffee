@@ -96,11 +96,25 @@ getSites().then ->
     suFetch = getStats "superuser"
     sfFetch = getStats "serverfault"
 
-    $.when(soFetch, suFetch, sfFetch).then drawChart
+svg = no
 
-drawChart = (so, su, sf) ->
-    sites = [so, sf, su]
-    extractTypes sites
+    $.when(soFetch, suFetch, sfFetch).then draw
+
+createChart = ->
+    svg = d3.select("#viz").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(#{margin.left},#{margin.top})")
+
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0,#{height})")
+    svg.append("g")
+        .attr("class", "y axis")
+
+drawChart = (sites) ->
+    createChart() if not svg
 
     xScale.domain sites.map (d) -> d.site.name
     yScale.domain [0, d3.max sites, (d) -> d.total_questions]
@@ -112,56 +126,83 @@ drawChart = (so, su, sf) ->
     yScale.nice().range [height, radius*2 + paddingSize]
 
     d3.select("#viz").append("ul")
-        .selectAll("li").data([so, su, sf])
+        .selectAll("li").data(sites)
         .enter().append("li")
         .text (site) -> "#{site.site.name}: #{format site.total_unanswered}/#{format site.total_questions}"
 
-    svg = d3.select("#viz").append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", "translate(#{margin.left},#{margin.top})")
+    bars = svg.selectAll(".site")
+        .data(sites, (d) -> d.site.name)
 
-    svg.selectAll(".site")
-        .data(sites)
-        .enter().append("rect")
+    bars.enter().append("rect")
         .attr("class", "site")
-        .attr("title", tooltipBar)
-        .attr("fill", "#ccc")
         .attr("x", xBySite)
         .attr("y", yByTotal)
         .attr("fill", colorBySite)
         .attr("width", xScale.rangeBand())
         .attr("height", (d) -> height - yByTotal(d))
 
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0,#{height})")
-        .call(xAxis)
+    bars.exit().remove()
 
-    svg.append("g")
-        .attr("class", "y axis")
+    bars.attr("title", tooltipBar)
+        .transition(40)
+        .attr("x", xBySite)
+        .attr("y", yByTotal)
+        .attr("fill", colorBySite)
+        .attr("width", xScale.rangeBand())
+        .attr("height", (d) -> height - yByTotal(d))
+
+    svg.select(".x.axis")
+        .transition(40)
+        .call(xAxis)
+    svg.select(".y.axis")
+        .transition(40)
         .call(yAxis)
 
     pies = svg.selectAll(".pie")
-        .data(sites)
-        .enter().append("g")
+        .data(sites, (d) -> d.site.name)
+
+    pies.exit().remove()
+
+    pies.enter()
+        .append("g")
         .attr("class", "pie")
         .attr("transform", (d) -> "translate(#{radius + xBySite(d) + paddingSize},#{radius})")
-
-    pies.append("image")
-        .attr("preserveAspectRatio", "xMidYMid")
+        .append("image")
+        .attr("class", "logo")
         .attr("title", (d) -> d.site.name)
+        .attr("xlink:href", (d) -> d.site.icon_url)
+        .attr("preserveAspectRatio", "xMidYMid")
+
+    pies
+        .transition(40)
+        .attr("transform", (d) -> "translate(#{radius + xBySite(d) + paddingSize},#{radius})")
+
+    pies.select(".logo")
         .attr("width", radius)
         .attr("height", radius)
         .attr("transform", "translate(#{-radius*0.5},#{-radius*0.5})")
-        .attr("xlink:href", (d) -> d.site.icon_url)
 
-    pies.selectAll(".arc")
+    arcs = pies.selectAll(".arc")
         .data((d) -> pie d.questions)
-        .enter().append("path")
+
+    arcs.enter().append("path")
         .attr("class", "arc")
+        .attr("stroke", "#ccc")
         .attr("title", tooltipPie)
         .attr("d", arc)
-        .attr("stroke", "#ccc")
         .style("fill", (d) -> colorByType d.data)
+
+    arcs
+        .transition(40)
+        .attr("title", tooltipPie)
+        .attr("d", arc)
+        .style("fill", (d) -> colorByType d.data)
+
+draw = (so, su, sf) ->
+    sites = [so, su, sf]
+    extractTypes sites
+    drawChart sites
+
+    setTimeout (-> drawChart [su, sf, so]), 1000
+    setTimeout (-> drawChart [sf, so, su]), 2000
+    setTimeout (-> drawChart sites), 3000
