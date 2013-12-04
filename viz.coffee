@@ -97,8 +97,7 @@ createBars = (bars) ->
         .call(updateBars)
 
 updateBars = (bars) ->
-    bars
-        .attr("x", xBySite)
+    bars.attr("x", xBySite)
         .attr("y", yByTotal)
         .attr("fill", colorBySite)
         .attr("width", xScale.rangeBand())
@@ -117,8 +116,7 @@ createPies = (radius, paddingSize) -> (pies) ->
     pies.call(updatePies(radius, paddingSize))
 
 updatePies = (radius, paddingSize) -> (pies) ->
-    pies
-        .attr("transform", (d) -> "translate(#{radius + xBySite(d) + paddingSize},#{radius})")
+    pies.attr("transform", (d) -> "translate(#{radius + xBySite(d) + paddingSize},#{radius})")
 
     pies.select(".logo")
         .attr("width", radius)
@@ -132,8 +130,7 @@ createArcs = (arcs) ->
         .call(updateArcs)
 
 updateArcs = (arcs) ->
-    arcs
-        .attr("title", tooltipPie)
+    arcs.attr("title", tooltipPie)
         .attr("d", arc)
         .style("fill", (d) -> colorByType d.data)
 
@@ -170,17 +167,11 @@ drawChart = (sites) ->
     bars.enter()
         .call(createBars)
 
-    bars.exit().remove()
+    bars.exit()
+        .remove()
 
     bars.transition(40)
         .call(updateBars)
-
-    svg.select(".x.axis")
-        .transition(40)
-        .call(xAxis)
-    svg.select(".y.axis")
-        .transition(40)
-        .call(yAxis)
 
     pies = svg.selectAll(".pie")
         .data(sites, (d) -> d.site.name)
@@ -191,8 +182,7 @@ drawChart = (sites) ->
     pies.exit()
         .remove()
 
-    pies
-        .transition(40)
+    pies.transition(40)
         .call(updatePies(radius, paddingSize))
 
     arcs = pies.selectAll(".arc")
@@ -201,9 +191,15 @@ drawChart = (sites) ->
     arcs.enter()
         .call(createArcs)
 
-    arcs
-        .transition(40)
+    arcs.transition(40)
         .call(updateArcs)
+
+    svg.select(".x.axis")
+        .transition(40)
+        .call(xAxis)
+    svg.select(".y.axis")
+        .transition(40)
+        .call(yAxis)
 
 draw = (so, su, sf) ->
     sites = [so, su, sf]
