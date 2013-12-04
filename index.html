@@ -2,6 +2,8 @@
   <head>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css">
     <script src="viz.js"></script>
     <style>
 .axis path,
@@ -14,9 +16,18 @@
 body {
     font: 10px sans-serif;
 }
+
+.ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
     </style>
   </head>
   <body>
     <div id="viz" />
+    <div id="controls">
+      <input type="text" id="pick" placeholder="Select a Stack Exchange site..." size=40>
+    </div>
   </body>
 </html>

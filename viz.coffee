@@ -202,11 +202,13 @@ drawChart = (sites) ->
         .call(yAxis)
 
 drawSelect = (sites) ->
-    d3.select("body").append("ul")
-        .selectAll("li").data(sites)
-        .enter()
-        .append("li")
-        .html((d) -> d.name)
+    $p = $("#pick").autocomplete
+        source: sites.map (d) ->
+            label: $("<span>").html(d.name).text()
+            value: d.api_site_parameter
+        select: (me) ->
+            console.log allSites[$p.val()]
+            setTimeout (-> $p.val("")), 0
 
 draw = (so, su, sf) ->
     sites = [so, su, sf]
