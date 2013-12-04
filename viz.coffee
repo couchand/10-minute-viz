@@ -58,8 +58,8 @@ pie = d3.layout.pie()
 
 key = "YOUR_API_KEY_HERE"
 filter =
-    sites: "!2--dQ)lBeYFePl.o9QMZm"
-    stats: "!tRKJ12V4q)fdK4n3R.46wlC8Zbqz2SL"
+    sites: "!2--dQ)lBeYF_nW9vSSb3m"
+    stats: "!tRKJ12V4q)fdK4mizgMuEQWjsOeXIou"
 
 getItems = (response) -> response.items
 getFirst = (response) -> response[0]
@@ -67,13 +67,16 @@ getFirst = (response) -> response[0]
 siteList = []
 siteMap = {}
 saveSites = (sites) ->
-    siteList = sites
-    siteMap[site.api_site_parameter] = site for site in sites
+    siteList = []
+    for site in sites.filter((d) -> d.site_type is "main_site")
+        site.name = $("<span>").html(site.name).text()
+        siteMap[site.api_site_parameter] = site
+        siteList.push site
 
 getSites = () ->
     $.getJSON("https://api.stackexchange.com/2.1/sites?key=#{key}&filter=#{filter.sites}&pagesize=999")
         .then(getItems)
-        .then saveSites
+        .then(saveSites)
 
 getStats = (site) ->
     $.getJSON("https://api.stackexchange.com/2.1/info?site=#{site}&key=#{key}&filter=#{filter.stats}")
@@ -82,6 +85,7 @@ getStats = (site) ->
 
 extractTypes = (sites) ->
     for site in sites
+        site.site = siteMap[site.site.api_site_parameter]
         site.questions = ["unanswered", "answered", "accepted"].map (type) ->
             if type is "answered"
                 type: type
@@ -206,7 +210,7 @@ drawChart = (sites) ->
 drawSelect = (sites) ->
     $p = $("#pick").autocomplete
         source: sites.map (d) ->
-            label: $("<span>").html(d.name).text()
+            label: d.name
             value: d.api_site_parameter
         select: ->
             site = siteMap[$p.val()]
@@ -223,8 +227,8 @@ draw = ->
         extractTypes sites
         drawChart sites
 
-getSites().then ->
-    drawSelect siteList.filter((d) -> d.site_type is "main_site").sort (a, b) -> d3.ascending a.name, b.name
+getSites().then () ->
+    drawSelect siteList
 
     siteMap["stackoverflow"].selected = yes
     siteMap["superuser"].selected = yes
