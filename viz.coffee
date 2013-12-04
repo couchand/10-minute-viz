@@ -54,7 +54,6 @@ pie = d3.layout.pie()
     .sort(null)
     .value (d) -> d.count
 
-
 # stack api
 
 key = "YOUR_API_KEY_HERE"
@@ -91,14 +90,9 @@ extractTypes = (sites) ->
 
 # fetch data and draw
 
-getSites().then ->
-    soFetch = getStats "stackoverflow"
-    suFetch = getStats "superuser"
-    sfFetch = getStats "serverfault"
 
 svg = no
 
-    $.when(soFetch, suFetch, sfFetch).then draw
 
 createChart = ->
     svg = d3.select("#viz").append("svg")
@@ -124,11 +118,6 @@ drawChart = (sites) ->
         .innerRadius(innerRadius)
 
     yScale.nice().range [height, radius*2 + paddingSize]
-
-    d3.select("#viz").append("ul")
-        .selectAll("li").data(sites)
-        .enter().append("li")
-        .text (site) -> "#{site.site.name}: #{format site.total_unanswered}/#{format site.total_questions}"
 
     bars = svg.selectAll(".site")
         .data(sites, (d) -> d.site.name)
@@ -206,3 +195,9 @@ draw = (so, su, sf) ->
     setTimeout (-> drawChart [su, sf, so]), 1000
     setTimeout (-> drawChart [sf, so, su]), 2000
     setTimeout (-> drawChart sites), 3000
+
+soFetch = getStats "stackoverflow"
+suFetch = getStats "superuser"
+sfFetch = getStats "serverfault"
+
+$.when(soFetch, suFetch, sfFetch).then draw
