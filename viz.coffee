@@ -58,7 +58,7 @@ pie = d3.layout.pie()
 
 key = "YOUR_API_KEY_HERE"
 filter =
-    sites: "!SmOA0zL2EfpNhn1ZEq"
+    sites: "!2--dQ)lBeYFePl.o9QMZm"
     stats: "!tRKJ12V4q)fdK4n3R.46wlC8Zbqz2SL"
 
 getItems = (response) -> response.items
@@ -69,7 +69,7 @@ saveSites = (sites) ->
     allSites[site.api_site_parameter] = site for site in sites
 
 getSites = () ->
-    $.getJSON("https://api.stackexchange.com/2.1/sites?key=#{key}&filter=#{filter.sites}")
+    $.getJSON("https://api.stackexchange.com/2.1/sites?key=#{key}&filter=#{filter.sites}&pagesize=999")
         .then(getItems)
         .then saveSites
 
@@ -201,17 +201,23 @@ drawChart = (sites) ->
         .transition(40)
         .call(yAxis)
 
+drawSelect = (sites) ->
+    d3.select("body").append("ul")
+        .selectAll("li").data(sites)
+        .enter()
+        .append("li")
+        .html((d) -> d.name)
+
 draw = (so, su, sf) ->
     sites = [so, su, sf]
     extractTypes sites
     drawChart sites
 
-    setTimeout (-> drawChart [su, sf, so]), 1000
-    setTimeout (-> drawChart [sf, so, su]), 2000
-    setTimeout (-> drawChart sites), 3000
+getSites().then (all) ->
+    drawSelect all.filter((d) -> d.site_type is "main_site").sort (a, b) -> d3.ascending a.name, b.name
 
-soFetch = getStats "stackoverflow"
-suFetch = getStats "superuser"
-sfFetch = getStats "serverfault"
+    soFetch = getStats "stackoverflow"
+    suFetch = getStats "superuser"
+    sfFetch = getStats "serverfault"
 
-$.when(soFetch, suFetch, sfFetch).then draw
+    $.when(soFetch, suFetch, sfFetch).then draw
